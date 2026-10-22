@@ -73,9 +73,14 @@ function render() {
     if (day.getMonth() !== viewMonth) cell.classList.add('other-month');
     if (dateStr === todayStr) cell.classList.add('today');
 
-    const num = document.createElement('span');
+    const label = day.toLocaleDateString(undefined,
+      { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const num = document.createElement('button');
+    num.type = 'button';
     num.className = 'day-number';
     num.textContent = day.getDate();
+    num.setAttribute('aria-label', `Add event on ${label}`);
+    if (dateStr === todayStr) num.setAttribute('aria-current', 'date');
     cell.append(num);
 
     const dayEvents = events
@@ -89,6 +94,8 @@ function render() {
       chip.dataset.id = ev.id;
       chip.textContent = (ev.startTime ? ev.startTime + ' ' : '') + ev.title;
       chip.title = ev.title;
+      chip.setAttribute('aria-label',
+        `Edit ${ev.title}${ev.startTime ? ', ' + ev.startTime : ''}, ${label}`);
       cell.append(chip);
     }
 
@@ -154,6 +161,13 @@ function showErrors(errors) {
     p.textContent = errors[field] || '';
     form.elements[field].setAttribute('aria-invalid', errors[field] ? 'true' : 'false');
   }
+  const first = Object.keys(errors)[0];
+  if (first) form.elements[first].focus();
+}
+
+// render() replaces the focused element, so put focus back on the affected day
+function restoreFocus(date) {
+  (grid.querySelector(`[data-date="${date}"] .day-number`) || document.getElementById('add')).focus();
 }
 
 // ---------- Event handlers ----------
@@ -173,6 +187,7 @@ form.addEventListener('submit', (e) => {
   saveEvents();
   modal.close();
   render();
+  restoreFocus(data.date);
 });
 
 deleteBtn.addEventListener('click', () => {
@@ -182,6 +197,7 @@ deleteBtn.addEventListener('click', () => {
   saveEvents();
   modal.close();
   render();
+  restoreFocus(ev.date);
 });
 
 document.getElementById('cancel').addEventListener('click', () => modal.close());

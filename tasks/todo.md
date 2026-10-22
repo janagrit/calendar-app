@@ -79,3 +79,48 @@ Events are stored in localStorage under `calendar.events` as a JSON array:
 - Edit → same id, title updated, no duplicate. 4 events on one day → 3 chips + "+1 more".
 - Delete (confirm accepted) → removed from storage. Corrupt JSON → `loadEvents()` returns `[]`.
 - Reload → events persist. Narrow viewport (500px, the minimum the test browser allowed) → mobile styles apply, no horizontal scroll, no console errors. 375px is untested.
+
+---
+
+# Accessibility fixes (WCAG 2.2 AA)
+
+- [x] **A1. Keyboard access to days** — day number becomes a `<button>` with a full-date `aria-label`; `aria-current="date"` on today
+  - AC: Tab reaches every day; Enter/Space opens the Add modal for that date.
+- [x] **A2. Focus restoration** — after save/delete, focus returns to the affected day (or "+ Add Event")
+  - AC: `document.activeElement` is not `<body>` after save or delete.
+- [x] **A3. Contrast** — `--muted` #6b7280, `--chip-text` #1d4fb8, `--border-strong` #8a9099 on inputs/buttons
+  - AC: text ≥ 4.5:1, input/button borders ≥ 3:1.
+- [x] **A4. Labels** — chips announce title, time and date; weekday header row `aria-hidden`
+- [x] **A5. Form errors** — `aria-describedby` links errors to fields; `aria-required` on title/date; focus moves to first invalid field
+- [x] **A6. Month announcements** — `aria-live="polite"` on month title; dialog `aria-labelledby`
+- [x] **A7. Focus & targets** — explicit `:focus-visible` ring; chips ≥ 24px tall
+  - AC: Visible focus on every control; no chip under 24px.
+
+---
+
+# Design system fixes
+
+- [x] **D1. Tokenise colors, type, spacing** — no raw hex/rgba outside `:root`; 4-step type scale; 4px spacing scale
+  - AC: `grep` finds no hex/rgba outside token blocks; ≤ 5 distinct font sizes; spacing values from `--space-*`.
+- [x] **D2. Dark mode** — `prefers-color-scheme: dark` overrides the color tokens only
+  - AC: All text ≥ 4.5:1 and input borders ≥ 3:1 in dark mode; no hardcoded light colors remain visible.
+- [x] **D3. Even rows + day-number alignment**
+  - AC: On desktop all 6 week rows are the same height regardless of event count (phones keep compact content-height rows); day-number text aligns with chip text.
+
+## Review (accessibility + design system)
+
+**Accessibility (A1–A7)** — `index.html`, `app.js`, `styles.css`
+- Day numbers are now `<button>`s labelled with the full date (`aria-current="date"` on today); chips announce title, time and date.
+- Focus returns to the affected day after save/delete; failed validation focuses the first invalid field; errors are linked via `aria-describedby`.
+- Month title is `aria-live`; dialog has `aria-labelledby`; required fields marked.
+- Contrast raised (`--muted`, `--chip-text`, `--border-strong`); explicit `:focus-visible` ring; chips ≥ 24px.
+
+**Design system (D1–D3)** — `styles.css` only
+- All colors, font sizes, spacing and radii come from tokens in `:root`; no raw hex/rgba or px spacing outside token blocks; 4 font sizes (xs/sm/lg/xl).
+- Dark mode overrides color tokens only; every pair checked (text ≥ 6.9:1, borders/focus ≥ 3.5:1). Form fields and dialog follow the theme.
+- Desktop rows are equal height (`grid-auto-rows: minmax(110px, 1fr)`); day-number text aligns with chip text (circle only on today).
+- Trade-off: equal rows on phones made the whole month as tall as its busiest week, so phones keep compact content-height rows.
+
+**Verification (headless Chrome)** — desktop 1280px light, 375px mobile dark: no horizontal scroll, rows 146px on desktop, number/chip text both at x=885, mobile grid 501px tall, chips 24px, no console errors.
+
+**Still open** — make "+N more" show the hidden events (needs a popover; deferred).

@@ -10,7 +10,7 @@
   <header class="toolbar">
     <div class="nav">
       <button id="prev" aria-label="Previous month">&lsaquo;</button>
-      <h1 id="month-title"></h1>
+      <h1 id="month-title" aria-live="polite"></h1>
       <button id="next" aria-label="Next month">&rsaquo;</button>
     </div>
     <div class="actions">
@@ -20,23 +20,25 @@
   </header>
 
   <main>
-    <div class="weekdays">
+    <!-- Hidden from screen readers: each day button announces its own weekday -->
+    <div class="weekdays" aria-hidden="true">
       <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
     </div>
     <div id="grid" class="grid"></div>
   </main>
 
-  <dialog id="modal">
+  <dialog id="modal" aria-labelledby="modal-title">
     <form id="event-form" novalidate>
       <h2 id="modal-title">Add Event</h2>
 
-      <label for="f-title">Title</label>
-      <input id="f-title" name="title" type="text" maxlength="100" autocomplete="off">
-      <p class="error" data-for="title"></p>
+      <label for="f-title">Title <span aria-hidden="true">*</span></label>
+      <input id="f-title" name="title" type="text" maxlength="100" autocomplete="off"
+             aria-required="true" aria-describedby="err-title">
+      <p class="error" id="err-title" data-for="title"></p>
 
-      <label for="f-date">Date</label>
-      <input id="f-date" name="date" type="date">
-      <p class="error" data-for="date"></p>
+      <label for="f-date">Date <span aria-hidden="true">*</span></label>
+      <input id="f-date" name="date" type="date" aria-required="true" aria-describedby="err-date">
+      <p class="error" id="err-date" data-for="date"></p>
 
       <div class="row">
         <div>
@@ -45,14 +47,14 @@
         </div>
         <div>
           <label for="f-end">End time</label>
-          <input id="f-end" name="endTime" type="time">
+          <input id="f-end" name="endTime" type="time" aria-describedby="err-endTime">
         </div>
       </div>
-      <p class="error" data-for="endTime"></p>
+      <p class="error" id="err-endTime" data-for="endTime"></p>
 
       <label for="f-desc">Description</label>
-      <textarea id="f-desc" name="description" rows="3" maxlength="500"></textarea>
-      <p class="error" data-for="description"></p>
+      <textarea id="f-desc" name="description" rows="3" maxlength="500" aria-describedby="err-description"></textarea>
+      <p class="error" id="err-description" data-for="description"></p>
 
       <div class="modal-actions">
         <button type="button" id="delete" class="danger">Delete</button>
