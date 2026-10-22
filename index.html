@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calendar</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="toolbar">
+    <div class="nav">
+      <button id="prev" aria-label="Previous month">&lsaquo;</button>
+      <h1 id="month-title"></h1>
+      <button id="next" aria-label="Next month">&rsaquo;</button>
+    </div>
+    <div class="actions">
+      <button id="today">Today</button>
+      <button id="add" class="primary">+ Add Event</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="weekdays">
+      <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+    </div>
+    <div id="grid" class="grid"></div>
+  </main>
+
+  <dialog id="modal">
+    <form id="event-form" novalidate>
+      <h2 id="modal-title">Add Event</h2>
+
+      <label for="f-title">Title</label>
+      <input id="f-title" name="title" type="text" maxlength="100" autocomplete="off">
+      <p class="error" data-for="title"></p>
+
+      <label for="f-date">Date</label>
+      <input id="f-date" name="date" type="date">
+      <p class="error" data-for="date"></p>
+
+      <div class="row">
+        <div>
+          <label for="f-start">Start time</label>
+          <input id="f-start" name="startTime" type="time">
+        </div>
+        <div>
+          <label for="f-end">End time</label>
+          <input id="f-end" name="endTime" type="time">
+        </div>
+      </div>
+      <p class="error" data-for="endTime"></p>
+
+      <label for="f-desc">Description</label>
+      <textarea id="f-desc" name="description" rows="3" maxlength="500"></textarea>
+      <p class="error" data-for="description"></p>
+
+      <div class="modal-actions">
+        <button type="button" id="delete" class="danger">Delete</button>
+        <span class="spacer"></span>
+        <button type="button" id="cancel">Cancel</button>
+        <button type="submit" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

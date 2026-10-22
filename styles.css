@@ -1,0 +1,161 @@
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --border: #dde1e6;
+  --text: #1f2328;
+  --muted: #8a9099;
+  --accent: #2f6fde;
+  --accent-soft: #e6eefc;
+  --danger: #c93c37;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button {
+  font: inherit;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { color: var(--danger); border-color: var(--danger); }
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.nav, .actions { display: flex; align-items: center; gap: 8px; }
+.nav button { font-size: 1.4rem; padding: 0 12px; }
+#month-title { font-size: 1.4rem; margin: 0; min-width: 180px; text-align: center; }
+
+/* Month grid */
+main { max-width: 1100px; margin: 0 auto; padding: 0 16px 16px; }
+
+.weekdays, .grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.weekdays div {
+  padding: 8px 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  text-transform: uppercase;
+}
+.grid {
+  background: var(--border);
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.day {
+  background: var(--surface);
+  min-height: 110px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  min-width: 0;
+}
+.day:hover { background: #fafbfc; }
+.day.other-month { background: #f9fafb; }
+.day.other-month .day-number { color: var(--muted); }
+
+.day-number {
+  font-size: 0.85rem;
+  font-weight: 600;
+  width: 26px;
+  height: 26px;
+  line-height: 26px;
+  text-align: center;
+  border-radius: 50%;
+}
+.day.today .day-number { background: var(--accent); color: #fff; }
+
+.chip {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  padding: 2px 6px;
+  border: none;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.78rem;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chip:hover { background: #d6e3fa; }
+.more { font-size: 0.75rem; color: var(--muted); padding-left: 6px; }
+
+/* Modal */
+dialog {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  overflow: auto;
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
+
+form { padding: 20px; display: flex; flex-direction: column; }
+form h2 { margin: 0 0 12px; font-size: 1.2rem; }
+form label { font-size: 0.85rem; font-weight: 600; margin: 8px 0 4px; display: block; }
+form input, form textarea {
+  font: inherit;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+form textarea { resize: vertical; }
+form [aria-invalid="true"] { border-color: var(--danger); }
+
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.error { color: var(--danger); font-size: 0.8rem; margin: 4px 0 0; min-height: 0; }
+.error:empty { display: none; }
+
+.modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+.spacer { flex: 1; }
+
+/* Small screens */
+@media (max-width: 600px) {
+  .toolbar { padding: 12px; }
+  #month-title { font-size: 1.1rem; min-width: 140px; }
+  main { padding: 0 8px 8px; }
+  .weekdays div { font-size: 0.7rem; padding: 6px 0; }
+  .day { min-height: 72px; padding: 3px; }
+  .day-number { font-size: 0.75rem; width: 22px; height: 22px; line-height: 22px; }
+  .chip { font-size: 0.65rem; padding: 1px 3px; }
+  .more { font-size: 0.65rem; padding-left: 3px; }
+  .row { grid-template-columns: 1fr; gap: 0; }
+}
