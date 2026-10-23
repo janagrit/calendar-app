@@ -195,3 +195,5 @@ Source: Open-Meteo (free, no API key, CORS allowed). NYC = 40.71, -74.01, timezo
 **Still open**
 - Netlify Visitor access → Public (user action), then re-check public URLs.
 - "+N more" doesn't reveal hidden events (from earlier review).
+
+**README** — added `README.md` (logo, live demo link, features, tech, run locally, notes, credits). Not published to Netlify.
