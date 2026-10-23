@@ -52,6 +52,95 @@ function newId() {
   return crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
+function addDays(d, n) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+}
+
+// ---------- Weather (Open-Meteo, New York City) ----------
+
+const WEATHER_PARAMS = 'latitude=40.71&longitude=-74.01'
+  + '&daily=weather_code,temperature_2m_max,temperature_2m_min'
+  + '&temperature_unit=fahrenheit&timezone=America%2FNew_York';
+const weather = new Map();           // 'YYYY-MM-DD' -> { code, hi, lo }
+const weatherRequested = new Set();  // 'start/end' ranges already fetched
+let weatherTimer = null;
+
+// WMO weather code -> [icon, description]
+function describeWeather(code) {
+  if (code === 0) return ['☀️', 'Sunny'];
+  if (code <= 2) return ['🌤️', 'Partly cloudy'];
+  if (code === 3) return ['☁️', 'Cloudy'];
+  if (code <= 48) return ['🌫️', 'Fog'];
+  if (code <= 57) return ['🌦️', 'Drizzle'];
+  if (code <= 67) return ['🌧️', 'Rain'];
+  if (code <= 77) return ['🌨️', 'Snow'];
+  if (code <= 82) return ['🌧️', 'Showers'];
+  if (code <= 86) return ['🌨️', 'Snow showers'];
+  return ['⛈️', 'Thunderstorm'];
+}
+
+async function fetchDaily(url, start, end) {
+  const res = await fetch(`${url}?${WEATHER_PARAMS}&start_date=${start}&end_date=${end}`);
+  if (!res.ok) throw new Error(`Weather request failed: ${res.status}`);
+  const { daily } = await res.json();
+  daily.time.forEach((date, i) => {
+    if (daily.weather_code[i] == null) return;
+    weather.set(date, {
+      code: daily.weather_code[i],
+      hi: Math.round(daily.temperature_2m_max[i]),
+      lo: Math.round(daily.temperature_2m_min[i]),
+    });
+  });
+}
+
+// Forecast API covers ~3 months back to 15 days ahead; older dates come from the archive.
+// ISO date strings compare correctly as plain strings.
+function loadWeather(start, end) {
+  const key = `${start}/${end}`;
+  if (weatherRequested.has(key)) return;
+  weatherRequested.add(key);
+
+  const today = new Date();
+  const fcStart = toISODate(addDays(today, -92));
+  const fcEnd = toISODate(addDays(today, 15));
+  const requests = [];
+  const from = start > fcStart ? start : fcStart;
+  const to = end < fcEnd ? end : fcEnd;
+  if (from <= to) requests.push(fetchDaily('https://api.open-meteo.com/v1/forecast', from, to));
+  if (start < fcStart) {
+    requests.push(fetchDaily('https://archive-api.open-meteo.com/v1/archive', start, end < fcStart ? end : fcStart));
+  }
+
+  Promise.allSettled(requests).then((results) => {
+    const failed = results.filter((r) => r.status === 'rejected');
+    if (failed.length) {
+      weatherRequested.delete(key); // retry next time this month is shown
+      failed.forEach((r) => console.error('Could not load weather', r.reason));
+    }
+    grid.querySelectorAll('.day').forEach(showWeather);
+  });
+}
+
+// Adds the weather line to a day cell in place, so focus and scroll are not disturbed
+function showWeather(cell) {
+  const w = weather.get(cell.dataset.date);
+  if (!w || cell.querySelector('.weather')) return;
+  const [icon, desc] = describeWeather(w.code);
+
+  const el = document.createElement('span');
+  el.className = 'weather';
+  el.setAttribute('aria-hidden', 'true'); // the day button's label carries this for screen readers
+  el.title = `${desc}, high ${w.hi}°F, low ${w.lo}°F`;
+  const lo = document.createElement('span');
+  lo.className = 'lo';
+  lo.textContent = ` / ${w.lo}°`;
+  el.append(`${icon} ${w.hi}°`, lo);
+
+  const num = cell.querySelector('.day-number');
+  num.after(el);
+  num.setAttribute('aria-label', `${num.getAttribute('aria-label')}. ${desc}, high ${w.hi}, low ${w.lo}`);
+}
+
 // ---------- Rendering ----------
 
 function render() {
@@ -81,7 +170,11 @@ function render() {
     num.textContent = day.getDate();
     num.setAttribute('aria-label', `Add event on ${label}`);
     if (dateStr === todayStr) num.setAttribute('aria-current', 'date');
-    cell.append(num);
+    const head = document.createElement('div');
+    head.className = 'day-head';
+    head.append(num);
+    cell.append(head);
+    showWeather(cell);
 
     const dayEvents = events
       .filter((ev) => ev.date === dateStr)
@@ -108,6 +201,11 @@ function render() {
 
     grid.append(cell);
   }
+
+  // Wait until the user stops paging through months so we don't fire a request per click
+  const gridStart = new Date(viewYear, viewMonth, 1 - firstWeekday);
+  clearTimeout(weatherTimer);
+  weatherTimer = setTimeout(() => loadWeather(toISODate(gridStart), toISODate(addDays(gridStart, 41))), 300);
 }
 
 // ---------- Modal ----------

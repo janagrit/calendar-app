@@ -124,3 +124,74 @@ Events are stored in localStorage under `calendar.events` as a JSON array:
 **Verification (headless Chrome)** — desktop 1280px light, 375px mobile dark: no horizontal scroll, rows 146px on desktop, number/chip text both at x=885, mobile grid 501px tall, chips 24px, no console errors.
 
 **Still open** — make "+N more" show the hidden events (needs a popover; deferred).
+
+---
+
+# Deploy to Netlify
+
+- [x] **N1. Log in** — user runs `! npx netlify-cli login` (opens browser, interactive)
+  - AC: `npx netlify-cli status` shows the logged-in account.
+- [x] **N2. Stage only the app files** — copy `index.html`, `styles.css`, `app.js` into a temp publish folder (outside the repo)
+  - AC: `CLAUDE.md`, `tasks/`, `.claude/` are NOT published. No repo files change.
+- [x] **N3. Draft deploy** — `netlify deploy --dir <folder>` creates a new site and a preview URL
+  - AC: preview URL loads, month grid renders, adding an event works, no console errors.
+- [x] **N4. Production deploy** — `netlify deploy --prod --dir <folder>`
+  - AC: live URL serves the same build.
+  - Status: deployed to https://janagrit-calendar.netlify.app, but the site returns 401 (Netlify visitor access protection is on). Needs to be made public in Netlify UI before it can be verified.
+
+---
+
+# Portfolio redesign + logo
+
+- [x] **R1. Logo** — new `logo.svg` (calendar mark + wordmark), shown in the header; also used as favicon
+  - AC: crisp at 32px and 160px; readable in light and dark mode.
+- [x] **R2. Typography** — Google Fonts: a display face for the month title + Inter for UI text (via tokens)
+  - AC: only `--font-*` tokens change the font; text still ≥ 4.5:1 contrast.
+- [x] **R3. Refined look (tokens + a few rules in styles.css)** — soft gradient page background, grid as an elevated rounded card, subtle shadows, softer chips, polished today marker
+  - AC: no raw colors outside `:root`; dark mode still passes contrast checks.
+- [x] **R4. Header layout** — brand on the left, month navigation in the middle, actions on the right; stacks neatly on phones
+  - AC: no horizontal scroll at 375px.
+- [x] **R5. Modal polish** — more spacing, larger radius, blurred backdrop
+- [x] **R6. Portfolio meta** — page title, description, Open Graph tags, theme-color
+- [x] **R7. Verify** — headless Chrome: desktop light + mobile dark screenshots, no console errors, focus rings visible
+- [ ] **R8. Redeploy** to Netlify (after the site is made public)
+
+---
+
+# NYC weather on each day
+
+Source: Open-Meteo (free, no API key, CORS allowed). NYC = 40.71, -74.01, timezone America/New_York, °F.
+- Forecast API covers ~93 days back to 15 days ahead.
+- Archive API covers older dates (actual recorded weather).
+- Dates more than ~15 days ahead: no data, the cell simply shows no weather.
+
+- [x] **W1. Fetch** — `loadWeather()` in `app.js`: for the 42 visible days, one request to the forecast API (+ one to the archive API only if the month is older); cache results in a `Map` keyed by `YYYY-MM-DD` so switching months back and forth doesn't refetch
+  - AC: max 2 requests per month view; network failure logs to console and the calendar still works.
+- [x] **W2. Show** — small line in each day cell: weather icon (from WMO weather code) + `high° / low°`, e.g. `☀️ 68° / 54°`
+  - AC: render() stays synchronous; weather fills in after the fetch resolves without moving focus.
+- [x] **W3. Accessibility** — weather text included in the day button's aria-label ("Sunny, high 68, low 54"); emoji hidden from screen readers
+- [x] **W4. Style** — muted small text via existing tokens; fits mobile cells without overflow
+- [x] **W5. Verify** — headless Chrome: current month shows weather for past + next 15 days, previous year month shows archive data, offline = no errors in UI
+  - Status: deployed (Daybook + weather) to https://janagrit-calendar.netlify.app — still returns 401 until Visitor access is set to Public in Netlify.
+
+## Review (deploy + weather + Daybook redesign)
+
+**Deploy (N1–N4)** — new Netlify site `janagrit-calendar` (team janagrit). Only `index.html`, `styles.css`, `app.js`, `logo.svg` are published from a temp folder; repo files (`CLAUDE.md`, `tasks/`, `.claude/`) are not uploaded. CLI needs Node ≥ 22 (used Node 24 via nvm).
+
+**NYC weather (W1–W5)** — `app.js`, `styles.css`
+- Open-Meteo forecast API (≈3 months back → 15 days ahead) + archive API for older months; no key, CORS ok.
+- Cached per date in a `Map`; requests debounced 300 ms (fast paging previously caused HTTP 429).
+- Weather is added to existing cells after the fetch, so focus is not lost; screen readers get it via the day button label.
+- Desktop: `☀️ 69° / 45°`; phones: icon + high only. Days beyond the forecast show nothing. Offline: calendar works, no UI errors.
+
+**Daybook redesign (R1–R7)** — `logo.svg` (new), `index.html`, `styles.css`
+- Logo mark (indigo gradient calendar) in header + favicon; "Daybook" wordmark as text.
+- Inter font; Linear-style indigo accent (#5e6ad2, 4.7:1 with white); soft header glow; grid as elevated rounded card; chips with accent bar; today ring.
+- Header: brand | month nav | actions; phones: brand + actions on top, nav below.
+- Modal: more padding, blurred backdrop, accent focus ring on inputs.
+- Meta: title, description, Open Graph, theme-color; Open-Meteo attribution in footer (required by CC BY 4.0).
+- Verified in headless Chrome: 1280px light + 375px dark, no horizontal scroll, no console errors, 41/42 days with weather.
+
+**Still open**
+- Netlify Visitor access → Public (user action), then re-check public URLs.
+- "+N more" doesn't reveal hidden events (from earlier review).
